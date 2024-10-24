@@ -1,0 +1,5 @@
+region="us-central1"
+subnet_cidr="10.30.10.0/24"
+subnet_secondary_gke_service_cidr="10.0.32.0/20"
+subnet_secondary_gke_pod_cidr="10.4.0.0/14"
+subnet_secondary_gke_master_cidr="172.16.10.0/28"
