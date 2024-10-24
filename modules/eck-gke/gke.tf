@@ -30,7 +30,7 @@ module "gke" {
       min_count            = 1
       max_count            = 10
       local_ssd_count      = 0
-      disk_size_gb         = 50 # limited by free tier
+      disk_size_gb         = 100 # limited by free tier
       disk_type            = "pd-standard"
       image_type           = "COS_CONTAINERD"
       enable_gcfs          = false

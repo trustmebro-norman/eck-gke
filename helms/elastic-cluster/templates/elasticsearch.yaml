@@ -1,0 +1,62 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+spec:
+  version: {{ .Values.elasticsearch.version }}
+  
+  {{- if .Values.elasticsearch.transport }}
+  transport:
+    {{- include "elasticsearch-cluster.transport" (dict "enableTLS" $.Values.elasticsearch.transport.enableTLS) | nindent 4 }}  
+  {{- end }}
+  
+  {{- if .Values.elasticsearch.podDisruptionBudget }}
+  podDisruptionBudget:
+    spec:
+      minAvailable: {{ .Values.elasticsearch.podDisruptionBudget.spec.minAvailable }}
+      selector:
+        matchLabels:
+          elasticsearch.k8s.elastic.co/cluster-name: {{ .Values.elasticsearch.name }}
+  {{- end }}          
+  
+  nodeSets:
+  {{- range $name, $nodeSet := .Values.elasticsearch.nodeSets }}
+  {{- if $nodeSet.enabled }}
+  - name: {{ $name }}
+    count: {{ $nodeSet.count }}
+    config:
+      {{- include "elasticsearch-cluster.nodeSetCommonConfig" (dict "enableClusterShardAlloc" $.Values.elasticsearch.common.config.enableClusterShardAlloc "enableTransportTLS" $.Values.elasticsearch.common.config.enableTransportTLS) | nindent 6 }}
+    podTemplate:
+      spec:
+        # support workload identity 
+        automountServiceAccountToken: {{ $.Values.elasticsearch.common.podTemplate.automountServiceAccountToken }}
+        serviceAccountName: {{ $.Values.elasticsearch.common.podTemplate.serviceAccountName }}
+
+        {{- if $.Values.elasticsearch.common.podTemplate.enableInitContainers }}
+        initContainers:
+        {{- include "elasticsearch-cluster.initContainers" (dict "enableInitContainers" $.Values.elasticsearch.common.enableInitContainers) | nindent 8 }}
+        {{- end }}
+
+        containers:
+        - name: elasticsearch
+          {{- if $.Values.elasticsearch.common.config.enableTransportTLS }}
+          volumeMounts:
+          {{- include "elasticsearch-cluster.extraVolumeMounts" (dict "enableTLS" $.Values.elasticsearch.common.config.enableTransportTLS) | nindent 10 }} 
+          {{- end }}
+
+        {{- if $.Values.elasticsearch.common.config.enableTransportTLS }}  
+        volumes:
+        {{- include "elasticsearch-cluster.extraVolumes" (dict "enableTLS" $.Values.elasticsearch.common.config.enableTransportTLS) | nindent 8 }}                  
+        {{- end }}
+
+        affinity:
+        {{- include "elasticsearch-cluster.affinity" (dict "enableAffinity" $.Values.elasticsearch.common.podTemplate.enableAffinity "zones" $.Values.elasticsearch.common.zoneAwareness.zones) | nindent 10 }}  
+
+    volumeClaimTemplates:
+    {{- include "elasticsearch-cluster.volumeClaimTemplate" (dict "storageClass" $.Values.elasticsearch.common.storageClass "storage" $nodeSet.storage) | nindent 4 }}
+
+    resources:
+      {{- toYaml $nodeSet.resources | nindent 6 }}
+  {{- end }}
+  {{- end }}

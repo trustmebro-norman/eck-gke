@@ -1,0 +1,107 @@
+---
+elasticsearch:
+  name: prod-es-cluster
+  version: 8.15.3
+
+  transport:
+    enableTLS: true
+
+  podDisruptionBudget:
+    spec:
+      minAvailable: 2
+
+  # Common settings for all node types
+  common:
+    config:
+      enableClusterShardAlloc: true
+      enableTransportTLS: true
+    podTemplate:
+        automountServiceAccountToken: true
+        serviceAccountName: es-node
+        enableInitContainers: true
+        enableAffinity: true
+    storageClass: "standard-rwo"
+    zoneAwareness:
+      enabled: true
+      zones:
+        - us-central1-a
+        - us-central1-b
+        - us-central1-c    
+
+  nodeSets:
+    # Node configurations
+    master:
+      enabled: true
+      count: 3
+      config:
+        node.roles: ["master"]                                 
+      resources:
+        limits:
+          memory: 8Gi
+          cpu: "4"
+        requests:
+          memory: 8Gi
+          cpu: "4"
+      storage: 100Gi       
+    
+    hot:
+      enabled: true
+      count: 3
+      config:
+        node.roles: ["data_hot", "data_content", "ingest"]                
+      resources:
+        limits:
+          memory: 32Gi
+          cpu: "8"
+        requests:
+          memory: 32Gi
+          cpu: "8"
+      storage: 500Gi
+    
+    warm:
+      enabled: false
+      count: 2
+      config:
+        node.roles: ["data_warm"]
+      resources:
+        limits:
+          memory: 16Gi
+          cpu: "4"
+        requests:
+          memory: 16Gi
+          cpu: "4"
+      storage: 1000Gi
+    
+    cold:
+      enabled: false
+      count: 2
+      config:
+        node.roles: ["data_cold"]
+      resources:
+        limits:
+          memory: 8Gi
+          cpu: "2"
+        requests:
+          memory: 8Gi
+          cpu: "2"
+      storage: 2000Gi
+
+---
+kibana:
+  enabled: true
+  name: prod-kibana
+  version: 8.15.3
+  count: 1
+  resources:
+    limits:
+      memory: 2Gi
+      cpu: "1"
+    requests:
+      memory: 2Gi
+      cpu: "1"
+  ingress:
+    enabled: true
+    className: "gce"
+    path: "/"
+    pathType: "Prefix"
+    port: 5601
