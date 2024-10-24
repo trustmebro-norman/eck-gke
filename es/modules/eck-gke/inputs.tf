@@ -25,3 +25,7 @@ variable "subnet_secondary_gke_pod_cidr" {
 variable "subnet_secondary_gke_master_cidr" {
   description = "GKE secondary range for pods"
 }
+
+variable "helm_releases" {
+  description = "helm releases mapping including managed workloads"
+}

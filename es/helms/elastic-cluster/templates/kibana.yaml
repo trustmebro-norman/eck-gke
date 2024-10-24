@@ -1,0 +1,222 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: prod-es-cluster
+spec:
+  version: 8.15.3
+  nodeSets:
+  - name: master
+    count: 1
+    config:
+      node.roles: ["master"]
+      cluster.routing.allocation.awareness.attributes: zone
+      cluster.routing.allocation.awareness.force.zone.values: us-central1-a, us-central1-b, us-central1-c
+    podTemplate:
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: topology.kubernetes.io/zone
+                  operator: In
+                  values:
+                  - us-central1-a
+                  - us-central1-b
+                  - us-central1-c
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  elasticsearch.k8s.elastic.co/cluster-name: prod-es-cluster
+                  elasticsearch.k8s.elastic.co/node-master: "true"
+              topologyKey: topology.kubernetes.io/zone
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: standard-rwo
+        resources:
+          requests:
+            storage: 100Gi
+    resources:
+      limits:
+        memory: 8Gi
+        cpu: "4"
+      requests:
+        memory: 8Gi
+        cpu: "4"
+
+  # Hot nodes
+  - name: hot
+    count: 3
+    config:
+      node.roles: ["data_hot", "data_content", "ingest"]
+      cluster.routing.allocation.awareness.attributes: zone
+    podTemplate:
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: topology.kubernetes.io/zone
+                  operator: In
+                  values:
+                  - us-central1-a
+                  - us-central1-b
+                  - us-central1-c
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  elasticsearch.k8s.elastic.co/cluster-name: prod-es-cluster
+                  elasticsearch.k8s.elastic.co/node-data: "true"
+              topologyKey: topology.kubernetes.io/zone
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: standard-rwo
+        resources:
+          requests:
+            storage: 500Gi
+    resources:
+      limits:
+        memory: 32Gi
+        cpu: "8"
+      requests:
+        memory: 32Gi
+        cpu: "8"
+    autoscaling:
+      policies:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80
+
+  # Warm nodes
+  - name: warm
+    count: 2
+    config:
+      node.roles: ["data_warm"]
+      cluster.routing.allocation.awareness.attributes: zone
+    podTemplate:
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: topology.kubernetes.io/zone
+                  operator: In
+                  values:
+                  - us-central1-a
+                  - us-central1-b
+                  - us-central1-c
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: standard-rwo
+        resources:
+          requests:
+            storage: 1000Gi
+    resources:
+      limits:
+        memory: 16Gi
+        cpu: "4"
+      requests:
+        memory: 16Gi
+        cpu: "4"
+
+  # Cold nodes
+  - name: cold
+    count: 2
+    config:
+      node.roles: ["data_cold"]
+      cluster.routing.allocation.awareness.attributes: zone
+    podTemplate:
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: topology.kubernetes.io/zone
+                  operator: In
+                  values:
+                  - us-central1-a
+                  - us-central1-b
+                  - us-central1-c
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: standard-rwo
+        resources:
+          requests:
+            storage: 2000Gi
+    resources:
+      limits:
+        memory: 8Gi
+        cpu: "2"
+      requests:
+        memory: 8Gi
+        cpu: "2"
+
+---
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: prod-kibana
+spec:
+  version: 8.11.1
+  count: 1
+  elasticsearchRef:
+    name: prod-es-cluster
+  http:
+    service:
+      spec:
+        type: ClusterIP
+  podTemplate:
+    spec:
+      containers:
+      - name: kibana
+        resources:
+          limits:
+            memory: 2Gi
+            cpu: "1"
+          requests:
+            memory: 2Gi
+            cpu: "1"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kibana-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prod-kibana-kb-http
+            port:
+              number: 5601

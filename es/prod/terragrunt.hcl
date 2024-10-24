@@ -5,6 +5,12 @@ include "root" {
 terraform {
   source = "../modules/eck-gke"
 
+  before_hook "copy_vars" {
+    commands = get_terraform_commands_that_need_vars()
+
+    execute  = ["cp", "-r", "${dirname(find_in_parent_folders())}/helms/", "."]
+  }
+
   extra_arguments "common_vars" {
     commands = get_terraform_commands_that_need_vars()
 

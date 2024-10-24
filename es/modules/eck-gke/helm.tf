@@ -120,3 +120,31 @@ locals {
   helm_releases = {}
 }
 
+resource "helm_release" "main" {
+  for_each = { for k, v in var.helm_releases : k => v if local.norman_want_it }
+
+  name         = each.value.release_name
+  repository   = each.value.repo
+  chart        = each.value.chart
+  version      = each.value.chart_version
+  namespace    = try(each.value.namespace, "default")
+  reset_values = try(each.value.reset_values, false)
+
+  values = [
+    for k, v in each.value.value_files: templatefile("${path.module}/helms/${v.name}", try(v.values, null) )
+  ]
+
+  dynamic "set" {
+    for_each = {
+      for k, v in try(each.value.overriden_values, []) : k => v if try(!v.is_sensitive, false) && try(!v.is_list, false)
+    }
+    iterator = set_default
+
+    content {
+      name  = set_default.value.name
+      value = set_default.value.value
+      type  = try(set_default.value.type, "string")
+    }
+  }
+}
+
