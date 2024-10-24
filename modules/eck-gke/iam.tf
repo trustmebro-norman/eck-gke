@@ -18,7 +18,7 @@ locals {
 }
 
 resource "google_compute_subnetwork_iam_binding" "gke_subnet" {
-  for_each = { for k, v in local.iam_subnet_role_bindings: k => v if local.norman_want_it }
+  for_each = { for k, v in local.iam_subnet_role_bindings : k => v if local.norman_want_it }
 
   project = var.project_id
   region  = var.region
@@ -30,7 +30,7 @@ resource "google_compute_subnetwork_iam_binding" "gke_subnet" {
 }
 
 module "storage_iam" {
-  count = local.norman_want_it ? 1 : 0
+  count   = local.norman_want_it ? 1 : 0
   source  = "terraform-google-modules/iam/google//modules/projects_iam"
   version = "~> 8.0"
 

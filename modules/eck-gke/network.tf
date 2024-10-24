@@ -1,5 +1,5 @@
 module "vpc" {
-  count = local.norman_want_it ? 1 : 0
+  count   = local.norman_want_it ? 1 : 0
   source  = "terraform-google-modules/network/google"
   version = "~> 9.3"
 

@@ -4,6 +4,18 @@ subnet_secondary_gke_service_cidr="10.0.32.0/20"
 subnet_secondary_gke_pod_cidr="10.4.0.0/14"
 subnet_secondary_gke_master_cidr="172.16.10.0/28"
 
+# GKE node config
+node_pool_configs = [
+    {
+      purpose              = "es"
+      machine_type         = "n2-standard-32" # 16 core, 128 GB mem
+      min_count            = 2
+      max_count            = 15
+      disk_size_gb         = 4096
+      initial_node_count   = 5
+    }
+]
+
 # K8s objects
 # namespaces
 namespaces = {

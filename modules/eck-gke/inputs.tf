@@ -37,3 +37,7 @@ variable "workload_identity_mappings" {
 variable "helm_releases" {
   description = "helm releases mapping including managed workloads"
 }
+
+variable "node_pool_configs" {
+  description = "config list for node_pool variants"
+}

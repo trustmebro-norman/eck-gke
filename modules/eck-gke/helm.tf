@@ -12,7 +12,7 @@ resource "time_sleep" "gke_destruction_cleanup" {
   count = local.norman_want_it ? 1 : 0
 
   destroy_duration = "180s"
-  depends_on = [module.gke]
+  depends_on       = [module.gke]
 }
 
 provider "kubernetes" {
@@ -74,7 +74,7 @@ resource "kubernetes_service_account" "this" {
     }
   }
 
-  depends_on = [ kubernetes_namespace_v1.this ]
+  depends_on = [kubernetes_namespace_v1.this]
 }
 
 resource "google_project_iam_member" "workload_identity-role" {
@@ -90,17 +90,17 @@ resource "google_project_iam_member" "workload_identity-role" {
 resource "helm_release" "main" {
   for_each = { for k, v in var.helm_releases : k => v if local.norman_want_it }
 
-  name         = each.value.release_name
-  repository   = try(each.value.repo, null) # support local chart
-  chart        = each.value.chart
-  version      = try(each.value.chart_version, null) # support local chart
-  namespace    = try(each.value.namespace, "default")
-  reset_values = try(each.value.reset_values, false)
-  force_update = try(each.value.force_update, false) # force update resources under helm release
+  name          = each.value.release_name
+  repository    = try(each.value.repo, null) # support local chart
+  chart         = each.value.chart
+  version       = try(each.value.chart_version, null) # support local chart
+  namespace     = try(each.value.namespace, "default")
+  reset_values  = try(each.value.reset_values, false)
+  force_update  = try(each.value.force_update, false)  # force update resources under helm release
   recreate_pods = try(each.value.recreate_pods, false) # force update pods based on strategy (re-create/rolling-update)
 
   values = [
-    for k, v in each.value.value_files: templatefile("${path.module}/helms/${v.name}", try(v.values, null) )
+    for k, v in each.value.value_files : templatefile("${path.module}/helms/${v.name}", try(v.values, null))
   ]
 
   dynamic "set" {

@@ -1,3 +1,3 @@
 locals {
-    norman_want_it = true
+  norman_want_it = true
 }
