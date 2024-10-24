@@ -87,13 +87,6 @@ resource "google_project_iam_member" "workload_identity-role" {
   depends_on = [kubernetes_service_account.this]
 }
 
-
-#  helm releases
-locals {
-  k8s_secrets = {}
-  helm_releases = {}
-}
-
 resource "helm_release" "main" {
   for_each = { for k, v in var.helm_releases : k => v if local.norman_want_it }
 
