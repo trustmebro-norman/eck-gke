@@ -4,7 +4,37 @@ subnet_secondary_gke_service_cidr="10.0.32.0/20"
 subnet_secondary_gke_pod_cidr="10.4.0.0/14"
 subnet_secondary_gke_master_cidr="172.16.10.0/28"
 
-# K8s secrets
+# K8s objects
+# namespaces
+namespaces = {
+    external-dns: {
+        name: "external-dns",
+    },
+    cert-manager: {
+        name: "cert-manager",
+    },
+    elastic-system: {
+        name: "elastic-system",
+    },
+    monitoring: {
+        name: "monitoring",
+    }
+}
+# workload identity
+workload_identity_mappings = {
+    external-dns : {
+        name : "external-dns",
+        roles : ["roles/dns.admin"],
+        kns : "external-dns"
+        namespace : "external-dns"
+    }
+    es-node: {
+        name : "es-node",
+        roles : ["roles/storage.folderAdmin"],
+        kns : "default"
+        namespace : "default"      
+    }    
+}
 
 # Helm releases
 helm_releases = {
@@ -30,6 +60,17 @@ helm_releases = {
             { name: "certmanager-values.yaml.tftpl", values: {} }
         ]
     }
+    # certmanager-csi
+    certmanager-csi = {
+        release_name = "certmanager-csi"
+        repo = "https://charts.jetstack.io"
+        chart = "cert-manager-csi-driver"
+        chart_version = "0.10.1"
+        namespace = "cert-manager"
+        value_files = [ 
+            { name: "certmanager-csi-values.yaml.tftpl", values: {} }
+        ]
+    }    
     # trustmanager
     trustmanager = {
         release_name = "trustmanager"
@@ -54,5 +95,17 @@ helm_releases = {
             }} 
         ]       
     }
+    # elasticsearch cluster, self-managed application
+    escluster = {
+        release_name = "esprod"
+        chart = "./helms/elastic-cluster"
+        chart_version = "0.1.0"
+        namespace = "default"
+        force_update = true
+        recreate_pods = true
+        value_files = [
+            { name: "escluster-values.yaml.tftpl", values: {} } 
+        ]       
+    }    
 }
 

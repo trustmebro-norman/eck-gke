@@ -24,7 +24,11 @@
   - dynamic bindings (PVCs)
   - PDB
   - CA and HPA
-  - NodeAffinity and TopologyConstraint
+  - NodeAffinity and topologySpreadConstraints (For topologySpreadConstraints, please make sure eck operator has value `exposedNodeLabels: [ "topology.kubernetes.io/.*", "failure-domain.beta.kubernetes.io/.*" ]`). [References](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-advanced-node-scheduling.html)
+
+## Durability
+  - Automated snapshot by GKE workload identity instead of secure GCP service account mounted to es node. [References](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-snapshots.html)
+
 
 ### Security
 

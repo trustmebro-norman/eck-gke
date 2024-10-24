@@ -26,6 +26,14 @@ variable "subnet_secondary_gke_master_cidr" {
   description = "GKE secondary range for pods"
 }
 
+variable "namespaces" {
+  description = "K8s namespace to create"
+}
+
+variable "workload_identity_mappings" {
+  description = "workload identity to create for mappings betweeen gcs and ksa"
+}
+
 variable "helm_releases" {
   description = "helm releases mapping including managed workloads"
 }

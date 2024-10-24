@@ -33,34 +33,8 @@ provider "helm" {
   }
 }
 
-# workload identity
-locals {
-  namespace = {
-    external-dns: {
-      name: "external-dns",
-    },
-    cert-manager: {
-      name: "cert-manager",
-    },
-    elastic-system: {
-      name: "elastic-system",
-    },
-    monitoring: {
-      name: "monitoring",
-    }
-  }
-  workload_identity_mappings = {
-    external-dns : {
-      name : "external-dns",
-      roles : ["roles/dns.admin"],
-      kns : "external-dns"
-      namespace : "external-dns"
-    }    
-  }
-}
-
 resource "kubernetes_namespace_v1" "this" {
-  for_each = { for k, ns in local.namespace : k => ns if local.norman_want_it }
+  for_each = { for k, ns in var.namespaces : k => ns if local.norman_want_it }
 
   metadata {
     name = each.value.name
@@ -68,14 +42,14 @@ resource "kubernetes_namespace_v1" "this" {
 }
 
 resource "google_service_account" "this" {
-  for_each = { for k, v in local.workload_identity_mappings : k => v.name if local.norman_want_it }
+  for_each = { for k, v in var.workload_identity_mappings : k => v.name if local.norman_want_it }
 
   account_id = each.value
 }
 
 resource "google_project_iam_member" "this" {
   for_each = merge([
-    for k, v in local.workload_identity_mappings : {
+    for k, v in var.workload_identity_mappings : {
       for role in v.roles : "${v.name}-${role}" => {
         name : v.name,
         kns : v.kns,
@@ -90,7 +64,7 @@ resource "google_project_iam_member" "this" {
 }
 
 resource "kubernetes_service_account" "this" {
-  for_each = { for k, v in local.workload_identity_mappings : k => v if local.norman_want_it }
+  for_each = { for k, v in var.workload_identity_mappings : k => v if local.norman_want_it }
 
   metadata {
     name      = each.value.name
@@ -104,7 +78,7 @@ resource "kubernetes_service_account" "this" {
 }
 
 resource "google_project_iam_member" "workload_identity-role" {
-  for_each = { for k, v in local.workload_identity_mappings : k => v if local.norman_want_it }
+  for_each = { for k, v in var.workload_identity_mappings : k => v if local.norman_want_it }
 
   project = var.project_id
   role    = "roles/iam.workloadIdentityUser"
@@ -124,11 +98,13 @@ resource "helm_release" "main" {
   for_each = { for k, v in var.helm_releases : k => v if local.norman_want_it }
 
   name         = each.value.release_name
-  repository   = each.value.repo
+  repository   = try(each.value.repo, null) # support local chart
   chart        = each.value.chart
-  version      = each.value.chart_version
+  version      = try(each.value.chart_version, null) # support local chart
   namespace    = try(each.value.namespace, "default")
   reset_values = try(each.value.reset_values, false)
+  force_update = try(each.value.force_update, false) # force update resources under helm release
+  recreate_pods = try(each.value.recreate_pods, false) # force update pods based on strategy (re-create/rolling-update)
 
   values = [
     for k, v in each.value.value_files: templatefile("${path.module}/helms/${v.name}", try(v.values, null) )
