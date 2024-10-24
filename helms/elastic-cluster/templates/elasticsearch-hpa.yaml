@@ -1,23 +1,28 @@
+---
+{{- if .Values.elasticsearch_hpa.hpa_enabled }}
 apiVersion: autoscaling.k8s.elastic.co/v1alpha1
 kind: ElasticsearchAutoscaler
 metadata:
-  name: prod-es-cluster-autoscaling
+  name: {{- .Values.elasticsearch.name }}-autoscaling
 spec:
   elasticsearchRef:
-    name: prod-es-cluster
+    name: {{- .Values.elasticsearch.name }}
   policies:
+    {{- if .Values.elasticsearch_hpa.data_hot_hpa_enabled }}
     - name: data-hot
-      roles: ["data_hot", "data_content" , "ingest"]
+      roles: {{- .Values.elasticsearch.nodeSets.master.config.node.roles }}
       resources:
         nodeCount:
-          min: 1
-          max: 3
+          min: {{- .Values.elasticsearch_hpa.node_count_min }}
+          max: {{- .Values.elasticsearch_hpa.node_count_max }}
         cpu:
-          min: 1
-          max: 2
+          min: {{- .Values.elasticsearch_hpa.cpu_min }}
+          max: {{- .Values.elasticsearch_hpa.cpu_max }}
         memory:
-          min: 2Gi
-          max: 2Gi
+          min: {{- .Values.elasticsearch_hpa.mem_min }}
+          max: {{- .Values.elasticsearch_hpa.mem_max }}
         storage:
-          min: 50Gi
-          max: 100Gi
+          min: {{- .Values.elasticsearch_hpa.storage_min }}
+          max: {{- .Values.elasticsearch_hpa.storage_max }}
+    {{- end }}
+{{- end }}

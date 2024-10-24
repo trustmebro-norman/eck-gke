@@ -7,32 +7,32 @@ subnet_secondary_gke_master_cidr="172.16.10.0/28"
 # K8s objects
 # namespaces
 namespaces = {
-    external-dns: {
-        name: "external-dns",
+    external-dns = {
+        name = "external-dns",
     },
-    cert-manager: {
-        name: "cert-manager",
+    cert-manager = {
+        name= "cert-manager",
     },
-    elastic-system: {
-        name: "elastic-system",
+    elastic-system = {
+        name= "elastic-system",
     },
-    monitoring: {
-        name: "monitoring",
+    monitoring = {
+        name= "monitoring",
     }
 }
 # workload identity
 workload_identity_mappings = {
-    external-dns : {
-        name : "external-dns",
-        roles : ["roles/dns.admin"],
-        kns : "external-dns"
-        namespace : "external-dns"
+    external-dns = {
+        name = "external-dns",
+        roles = ["roles/dns.admin"],
+        kns = "external-dns"
+        namespace = "external-dns"
     }
-    es-node: {
-        name : "es-node",
-        roles : ["roles/storage.folderAdmin"],
-        kns : "default"
-        namespace : "default"      
+    es-node = {
+        name = "es-node",
+        roles = ["roles/storage.folderAdmin"],
+        kns = "default"
+        namespace = "default"      
     }    
 }
 
@@ -104,8 +104,64 @@ helm_releases = {
         force_update = true
         recreate_pods = true
         value_files = [
-            { name: "escluster-values.yaml.tftpl", values: {} } 
-        ]       
+            { name = "escluster-values.yaml.tftpl", values = {
+                cluster_name = "prod"
+                elastic_version = "8.15.3"
+                pdb_min_available = 2
+                storage_class = "standard-rwo"
+                region = "us-central1"
+                hpa_enabled = true
+                # master nodeSet
+                enable_master_node = true
+                master_count = 3
+                master_cpu_request = 4
+                master_mem_request = "8Gi"
+                master_cpu_limit = 4
+                master_mem_limit = "8Gi"                
+                master_storage = "100Gi"
+                master_hpa_enabled = false
+                # data_hot nodeSet
+                enable_data_hot_node = true
+                data_hot_count = 3
+                data_hot_cpu_request = 8
+                data_hot_mem_request = "32Gi"
+                data_hot_cpu_limit = 8
+                data_hot_mem_limit = "32Gi"                
+                data_hot_storage = "500Gi"
+                data_hot_hpa_enabled = true
+                # data_warm nodeSet
+                enable_data_warm_node = true
+                data_warm_count = 2
+                data_warm_cpu_request = 4
+                data_warm_mem_request = "16Gi"
+                data_warm_cpu_limit = 4
+                data_warm_mem_limit = "16Gi"
+                data_warm_storage = "1000Gi"
+                data_warm_hpa_enabled = false               
+                # data_cold nodeSet
+                enable_data_cold_node = true
+                data_cold_count = 2
+                data_cold_cpu_request = 2
+                data_cold_mem_request = "8Gi"
+                data_cold_cpu_limit = 2
+                data_cold_mem_limit = "8Gi"                
+                data_cold_storage = "2000Gi"
+                data_cold_hpa_enabled = false
+                # kibana
+                kibana_enabled = true
+                kibana_count = 1
+                kibana_service_type = "ClusterIP"
+                kibana_cpu_request = "500Mi"
+                kibana_mem_request = "1Gi"
+                kibana_cpu_limit = 1
+                kibana_mem_limit = "2Gi"
+                kibana_ingress_enabled = true
+                kibana_ingress_class = "gce"
+                root_domain = "normanguys.dev"
+                use_externaldns = true
+                } 
+            } 
+        ]
     }    
 }
 

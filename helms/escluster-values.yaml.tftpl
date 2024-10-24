@@ -1,14 +1,14 @@
 ---
 elasticsearch:
-  name: prod-es-cluster
-  version: 8.15.3
+  name: ${cluster_name}
+  version: ${elastic_version}
 
   transport:
     enableTLS: true
 
   podDisruptionBudget:
     spec:
-      minAvailable: 2
+      minAvailable: ${pdb_min_available}
 
   # Common settings for all node types
   common:
@@ -20,88 +20,101 @@ elasticsearch:
         serviceAccountName: es-node
         enableInitContainers: true
         enableAffinity: true
-    storageClass: "standard-rwo"
+        enableTopologySpreadConstraints: true
+    storageClass: ${storage_class}
     zoneAwareness:
       enabled: true
       zones:
-        - us-central1-a
-        - us-central1-b
-        - us-central1-c    
+        - ${region}-a
+        - ${region}-b
+        - ${region}-c    
 
   nodeSets:
     # Node configurations
     master:
-      enabled: true
-      count: 3
+      enabled: ${enable_master_node}
+      count: ${master_count}
       config:
         node.roles: ["master"]                                 
       resources:
         limits:
-          memory: 8Gi
-          cpu: "4"
+          memory: ${master_mem_limit}
+          cpu: ${master_cpu_limit}
         requests:
-          memory: 8Gi
-          cpu: "4"
-      storage: 100Gi       
+          memory: ${master_mem_request}
+          cpu: ${master_cpu_request}
+      storage: ${master_storage}       
     
     hot:
-      enabled: true
-      count: 3
+      enabled: ${enable_data_hot_node}
+      count: ${data_hot_count}
       config:
         node.roles: ["data_hot", "data_content", "ingest"]                
       resources:
         limits:
-          memory: 32Gi
-          cpu: "8"
+          memory: ${data_hot_mem_limit}
+          cpu: ${data_hot_cpu_limit}
         requests:
-          memory: 32Gi
-          cpu: "8"
-      storage: 500Gi
+          memory: ${data_hot_mem_request}
+          cpu: ${data_hot_cpu_request}
+      storage: ${data_hot_storage}
     
     warm:
-      enabled: false
-      count: 2
+      enabled: ${enable_data_warm_node}
+      count: ${data_warm_count}
       config:
         node.roles: ["data_warm"]
       resources:
         limits:
-          memory: 16Gi
-          cpu: "4"
+          memory: ${data_warm_mem_limit}
+          cpu: ${data_warm_cpu_limit}
         requests:
-          memory: 16Gi
-          cpu: "4"
-      storage: 1000Gi
+          memory: ${data_warm_mem_request}
+          cpu: ${data_warm_cpu_request}
+      storage: ${data_warm_storage}
     
     cold:
-      enabled: false
-      count: 2
+      enabled: ${enable_data_cold_node}
+      count: ${data_cold_count}
       config:
         node.roles: ["data_cold"]
       resources:
         limits:
-          memory: 8Gi
-          cpu: "2"
+          memory: ${data_cold_mem_limit}
+          cpu: ${data_cold_cpu_limit}
         requests:
-          memory: 8Gi
-          cpu: "2"
-      storage: 2000Gi
-
+          memory: ${data_cold_mem_request}
+          cpu: ${data_cold_cpu_request}
+      storage: ${data_cold_storage}
+---
+elasticsearch_hpa:
+  hpa_enabled: true
+  # data_hot nodeSet autoscale
+  data_hot_hpa_enabled: true
+  node_count_min: 3
+  node_count_max: 10
+  cpu_min: 8
+  cpu_max: 8
+  mem_min: "32Gi"
+  mem_max: "32Gi"
+  storage_min: "500Gi"
+  storage_max: "1000Gi"
 ---
 kibana:
-  enabled: true
-  name: prod-kibana
-  version: 8.15.3
-  count: 1
-  resources:
-    limits:
-      memory: 2Gi
-      cpu: "1"
-    requests:
-      memory: 2Gi
-      cpu: "1"
+  enabled: ${kibana_enabled}
+  name: ${cluster_name}-kibana
+  version: ${elastic_version}
+  count: ${kibana_count}
+  service_type: ${kibana_service_type}
+  kibana_mem_limit: ${kibana_mem_limit}
+  kibana_cpu_limit: ${kibana_cpu_limit}
+  kibana_mem_request: ${kibana_mem_request}
+  kibana_cpu_request: ${kibana_cpu_request}
   ingress:
-    enabled: true
-    className: "gce"
+    enabled: ${kibana_ingress_enabled}
+    className: ${kibana_ingress_class}
+    root_domain: ${root_domain}
+    use_externaldns: ${use_externaldns}
     path: "/"
-    pathType: "Prefix"
+    path_type: "Prefix"
     port: 5601

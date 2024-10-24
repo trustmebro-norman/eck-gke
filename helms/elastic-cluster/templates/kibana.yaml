@@ -1,45 +1,50 @@
 ---
+{{- if .Values.kibana.enabled }}
 apiVersion: kibana.k8s.elastic.co/v1
 kind: Kibana
 metadata:
-  name: prod-kibana
+  name: ${{ .Values.kibana.name }}
 spec:
-  version: 8.15.3
-  count: 1
+  version: ${{ .Values.kibana.version }}
+  count: ${{ .Values.kibana.count }}
   elasticsearchRef:
-    name: prod-es-cluster
+    name: ${{ .Values.elasticsearch.name }}-cluster
   http:
     service:
       spec:
-        type: ClusterIP
+        type: ${{ .Values.kibana.service_type }}
   podTemplate:
     spec:
       containers:
       - name: kibana
         resources:
           limits:
-            memory: 1Gi
-            cpu: "250Mi"
+            memory: ${{ .Values.kibana.kibana_mem_limit }}
+            cpu: ${{ .Values.kibana.kibana_cpu_limit }}
           requests:
-            memory: 1Gi
-            cpu: "250Mi"
-
+            memory: ${{ .Values.kibana.kibana_mem_request }}
+            cpu: ${{ .Values.kibana.kibana_cpu_request }}
+{{- end }}
 ---
+{{- if .Values.kibana.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: kibana-ingress
+  name: ${{ .Values.kibana.name }}-ingress
   annotations:
-    kubernetes.io/ingress.class: "gce"
-    external-dns.alpha.kubernetes.io/hostname: kibana.normanguys.dev # need to be parameterized
+    kubernetes.io/ingress.class: ${{ .Values.kibana.ingress.className }}
+    {{- if .Values.kibana.ingress.use_externaldns }}
+    external-dns.alpha.kubernetes.io/hostname: kibana.${{ .Values.kibana.ingress.root_domain }} # need to be parameterized
+    {{- end }}
 spec:
   rules:
   - http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: ${{ .Values.kibana.ingress.path }}
+        pathType: ${{ .Values.kibana.ingress.path_type }}
         backend:
           service:
-            name: prod-kibana-kb-http
+            name: ${{ .Values.kibana.name }}-kb-http
             port:
-              number: 5601
+              number: ${{ .Values.kibana.ingress.port }}
+{{- end }}

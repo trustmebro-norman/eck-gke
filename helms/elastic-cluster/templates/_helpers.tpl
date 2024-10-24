@@ -86,3 +86,17 @@ nodeAffinity:
           {{- end }} 
 {{- end -}}
 {{- end -}}
+
+{{/* Define helper function for topologySpreadConstraints config */}}
+{{- define "elasticsearch-cluster.topologySpreadConstraints" -}}
+{{- if .enableTopologySpreadConstraints -}}
+- maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+  nodeAffinityPolicy: Honor
+  nodeTaintsPolicy: Honor
+  labelSelector:
+    matchLabels:
+      elasticsearch.k8s.elastic.co/cluster-name={{ .clusterName }}-cluster 
+{{- end -}}
+{{- end -}}

@@ -50,8 +50,15 @@ spec:
         {{- include "elasticsearch-cluster.extraVolumes" (dict "enableTLS" $.Values.elasticsearch.common.config.enableTransportTLS) | nindent 8 }}                  
         {{- end }}
 
+        {{- if $.Values.elasticsearch.common.podTemplate.enableAffinity }}
         affinity:
-        {{- include "elasticsearch-cluster.affinity" (dict "enableAffinity" $.Values.elasticsearch.common.podTemplate.enableAffinity "zones" $.Values.elasticsearch.common.zoneAwareness.zones) | nindent 10 }}  
+        {{- include "elasticsearch-cluster.affinity" (dict "enableAffinity" $.Values.elasticsearch.common.podTemplate.enableAffinity "zones" $.Values.elasticsearch.common.zoneAwareness.zones) | nindent 10 }}
+        {{- end }}
+
+        {{- if $.Values.elasticsearch.common.podTemplate.enableTopologySpreadConstraints }}
+        topologySpreadConstraints:
+        {{- include "elasticsearch-cluster.topologySpreadConstraints" (dict "enableAffinity" $.Values.elasticsearch.common.podTemplate.enableTopologySpreadConstraints "clusterName" $.Values.elasticsearch.name) | nindent 10 }}
+        {{- end }}  
 
     volumeClaimTemplates:
     {{- include "elasticsearch-cluster.volumeClaimTemplate" (dict "storageClass" $.Values.elasticsearch.common.storageClass "storage" $nodeSet.storage) | nindent 4 }}
