@@ -1,3 +1,4 @@
+project_id = "norman-not-normal"
 prefix= "prod"
 region="us-central1"
 subnet_cidr="10.30.10.0/24"
@@ -16,38 +17,6 @@ node_pool_configs = [
       initial_node_count   = 5
     }
 ]
-
-# K8s objects
-# namespaces
-namespaces = {
-    external-dns = {
-        name = "external-dns",
-    },
-    cert-manager = {
-        name= "cert-manager",
-    },
-    elastic-system = {
-        name= "elastic-system",
-    },
-    monitoring = {
-        name= "monitoring",
-    }
-}
-# workload identity
-workload_identity_mappings = {
-    external-dns = {
-        name = "external-dns",
-        roles = ["roles/dns.admin"],
-        kns = "external-dns"
-        namespace = "external-dns"
-    }
-    es-node = {
-        name = "es-node",
-        roles = ["roles/storage.folderAdmin"],
-        kns = "default"
-        namespace = "default"      
-    }    
-}
 
 # Helm releases
 helm_releases = {

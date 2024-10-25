@@ -15,11 +15,11 @@ terraform {
     commands = get_terraform_commands_that_need_vars()
 
     arguments = [
-      "-var-file=${get_parent_terragrunt_dir()}/tfvars/common.tfvars",
+      "-var-file=${get_parent_terragrunt_dir()}/tfvars/prod.tfvars",
     ]
 
     optional_var_files = [
-      "${get_parent_terragrunt_dir()}/tfvars/prod.tfvars"
+      "${get_parent_terragrunt_dir()}/tfvars/common.tfvars"
     ]
   }
 }

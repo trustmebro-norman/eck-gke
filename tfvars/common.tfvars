@@ -1,5 +1,3 @@
-project_id = "norman-not-normal"
-
 # K8s common
 # namespaces
 namespaces = {

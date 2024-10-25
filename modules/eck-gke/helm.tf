@@ -120,5 +120,9 @@ resource "helm_release" "main" {
       type  = try(set_default.value.type, "string")
     }
   }
+
+  depends_on = [ 
+    kubernetes_service_account.this
+  ]
 }
 
