@@ -41,3 +41,7 @@ variable "helm_releases" {
 variable "node_pool_configs" {
   description = "config list for node_pool variants"
 }
+
+variable "eck_helm_common_values" {
+  description = "common values for eck-gke helm. To keep prod.tfvars and dev.tfvars DRY"
+}

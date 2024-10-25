@@ -1,3 +1,4 @@
+{{- if .Values.elasticsearch.common.config.enableTransportTLS }}
 # root CA cluster issuer
 ---
 apiVersion: cert-manager.io/v1
@@ -51,3 +52,4 @@ spec:
   target:
     configMap:
       key: "ca.crt"
+{{- end }}

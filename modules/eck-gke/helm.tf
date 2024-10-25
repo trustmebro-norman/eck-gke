@@ -100,7 +100,12 @@ resource "helm_release" "main" {
   recreate_pods = try(each.value.recreate_pods, false) # force update pods based on strategy (re-create/rolling-update)
 
   values = [
-    for k, v in each.value.value_files : templatefile("${path.module}/helms/${v.name}", try(v.values, null))
+    for k, v in each.value.value_files : 
+      try(each.value.merge_with_common, false)
+      # try to merge var.eck_helm_common_values with override version, by default return var.eck_helm_common_values
+      ? templatefile("${path.module}/helms/${v.name}", try(merge(var.eck_helm_common_values, v.values), var.eck_helm_common_values))
+      # otherwise use bare values
+      : templatefile("${path.module}/helms/${v.name}", try(v.values, null))
   ]
 
   dynamic "set" {

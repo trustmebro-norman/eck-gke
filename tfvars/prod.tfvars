@@ -1,3 +1,4 @@
+prefix= "prod"
 region="us-central1"
 subnet_cidr="10.30.10.0/24"
 subnet_secondary_gke_service_cidr="10.0.32.0/20"
@@ -115,6 +116,7 @@ helm_releases = {
         namespace = "default"
         force_update = true
         recreate_pods = true
+        merge_with_common = true
         value_files = [
             { name = "escluster-values.yaml.tftpl", values = {
                 cluster_name = "prod"

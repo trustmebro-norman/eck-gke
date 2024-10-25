@@ -1,7 +1,6 @@
 ## ECK a.k.a ElasticSearch Cloud on Kubernetes
 
 ## References
-
 - [ElasticSearch Transport](Transport settings | Elastic Cloud on Kubernetes [2.14] | Elastic
   www.elastic.co)
 - [ElasticSearch Transport settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-transport-settings.html#k8s-transport-ca)
@@ -14,9 +13,7 @@
 - [Cloudflare](https://blog.palark.com/using-ssl-certificates-from-lets-encrypt-in-your-kubernetes-ingress-via-cert-manager/)
 
 ## HA
-
 - Elastics Search implementation
-
   - Multiple nodes
   - Multiple node roles
 
@@ -31,6 +28,5 @@
 
 
 ### Security
-
 - TLS between Node Transport by cert-manager and trust-manager
 - TLS from browser to Kibana
