@@ -1,10 +1,10 @@
 ---
+global:
+  namespace: ${namespace}
+---
 elasticsearch:
   name: ${cluster_name}
   version: ${elastic_version}
-
-  transport:
-    enableTLS: true
 
   podDisruptionBudget:
     spec:
@@ -14,7 +14,8 @@ elasticsearch:
   common:
     config:
       enableClusterShardAlloc: true
-      enableTransportTLS: true
+      enableHttpTLS: true # client-server TLS configuration
+      enableTransportTLS: true # inter-node TLS configuration
     podTemplate:
         automountServiceAccountToken: true
         serviceAccountName: es-node
@@ -110,6 +111,7 @@ kibana:
   kibana_cpu_limit: ${kibana_cpu_limit}
   kibana_mem_request: ${kibana_mem_request}
   kibana_cpu_request: ${kibana_cpu_request}
+  cert_name: ${cluster_name}-kibana-cert
   ingress:
     enabled: ${kibana_ingress_enabled}
     className: ${kibana_ingress_class}

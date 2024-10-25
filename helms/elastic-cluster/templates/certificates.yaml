@@ -52,4 +52,25 @@ spec:
   target:
     configMap:
       key: "ca.crt"
+---
+{{- if and ( .Values.kibana.enableHttpTLS | default true ) ( .Values.kibana.enableIngressTLS | default true ) }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.kibana.cert_name }}
+spec:
+  commonName: selfsigned-ca
+  secretName: {{ .Values.kibana.cert_name }}
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+  - {{ .Values.kibana.name }}-kb-http
+  - {{ .Values.kibana.name }}-kb-http.{{ .Values.global.namespace }}
+  - {{ .Values.kibana.name }}-kb-http.{{ .Values.global.namespace }}.svc.cluster.local
+  issuerRef:
+    name: cluster-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+{{- end }}
 {{- end }}

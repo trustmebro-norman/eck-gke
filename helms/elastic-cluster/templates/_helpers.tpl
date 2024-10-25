@@ -1,12 +1,18 @@
-{{/* Define common config for nodeset  */}}
+{{/* Define config for es nodeset  */}}
 {{- define "elasticsearch-cluster.nodeSetCommonConfig" -}}
 {{- if .enableClusterShardAlloc  -}}
 # cluster level shard allocation
 # Refer: https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-cluster.html
 cluster.routing.allocation.awareness.attributes: zone
 cluster.routing.allocation.awareness.force.zone.values: us-central1-a, us-central1-b, us-central1-c
-{{- end }}
-{{- if .enableTransportTLS  }}
+{{- end -}}
+{{- if .enableHttpTLS | default true -}}
+# http TLS enabled. Es CA cert should be mounted to client trust store (Eg: Kibana)
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: /usr/share/elasticsearch/config/cert-manager-certs/tls.key
+xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/cert-manager-certs/tls.crt 
+{{- end -}}
+{{- if .enableTransportTLS | default true  -}}
 # transport TLS
 xpack.security.transport.ssl.enabled: true
 xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/cert-manager-certs/tls.key
@@ -98,5 +104,51 @@ nodeAffinity:
   labelSelector:
     matchLabels:
       elasticsearch.k8s.elastic.co/cluster-name={{ .clusterName }}-cluster 
+{{- end -}}
+{{- end -}}
+
+
+
+{{/* Define config for Kibana  */}}
+{{- define "elasticsearch-cluster.kibanaConfig" -}}
+{{- if .enableHttpTLS | default true -}}
+elasticsearch.hosts: https://{{ .clusterName }}-es-http:9200
+elasticsearch.ssl.certificateAuthorities: $KBN_PATH_CONF/cert-manager-certs/elasticsearch-ca.pem
+elasticsearch.username: elastic
+{{- end -}}
+{{- if .enableIngressTLS | default true  -}}
+server.ssl.enabled: true
+server.ssl.certificate: $KBN_PATH_CONF/cert-manager-certs/kibana/tls.crt
+server.ssl.key: $KBN_PATH_CONF/cert-manager-certs/kibana/tls.key
+{{- end -}}
+{{- end -}}
+
+{{/* Define helper function for Kibana extraVolumes config */}}
+{{- define "elasticsearch-cluster.kibanaExtraVolumes" -}}
+{{- if .enableHttpTLS | default true -}}
+- name: elasticsearch-ca-cert
+  configMap:
+    name: trust
+{{- end -}}
+{{- if .enableIngressTLS | default true -}}
+- name: kibana-cert
+  secret:
+    secretName: kibana-cert
+{{- end -}}
+{{- end -}}
+
+{{/* Define helper function for Kibana extraVolumeMounts config */}}
+{{- define "elasticsearch-cluster.kibanaExtraVolumeMounts" -}}
+{{- if .enableHttpTLS | default true -}}
+- name: elasticsearch-ca-cert
+  mountPath: $KBN_PATH_CONF/cert-manager-certs/elasticsearch-ca.pem
+{{- end -}}
+{{- if .enableIngressTLS | default true -}}
+- name: kibana-cert
+  subPath: tls.crt
+  mountPath: $KBN_PATH_CONF/cert-manager-certs/kibana/tls.crt
+- name: kibana-cert
+  subPath: tls.key
+  mountPath: $KBN_PATH_CONF/cert-manager-certs/kibana/tls.key  
 {{- end -}}
 {{- end -}}

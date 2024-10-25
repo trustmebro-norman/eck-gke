@@ -120,11 +120,8 @@ helm_releases = {
         value_files = [
             { name = "escluster-values.yaml.tftpl", values = {
                 cluster_name = "prod"
-                elastic_version = "8.15.3"
-                pdb_min_available = 2
-                storage_class = "standard-rwo"
+                pdb_min_available = 5
                 region = "us-central1"
-                hpa_enabled = true
                 # master nodeSet
                 enable_master_node = true
                 master_count = 3
@@ -162,17 +159,10 @@ helm_releases = {
                 data_cold_storage = "2000Gi"
                 data_cold_hpa_enabled = false
                 # kibana
-                kibana_enabled = true
-                kibana_count = 1
-                kibana_service_type = "ClusterIP"
                 kibana_cpu_request = "500Mi"
                 kibana_mem_request = "1Gi"
                 kibana_cpu_limit = 1
                 kibana_mem_limit = "2Gi"
-                kibana_ingress_enabled = true
-                kibana_ingress_class = "gce"
-                root_domain = "normanguys.dev"
-                use_externaldns = true
                 } 
             } 
         ]

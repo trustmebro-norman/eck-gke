@@ -29,6 +29,7 @@ workload_identity_mappings = {
 # will be merged in helm_releases at Terraform runtime
 # to keep dev.tfvars and prod.tfvars dry
 eck_helm_common_values = {
+    namespace = "default"
     cluster_name = "common"
     elastic_version = "8.15.3"
     pdb_min_available = 2
@@ -74,7 +75,7 @@ eck_helm_common_values = {
     # kibana
     kibana_enabled = true
     kibana_count = 1
-    kibana_service_type = "ClusterIP"
+    kibana_service_type = "LoadBalancer"
     kibana_cpu_request = "250Mi"
     kibana_mem_request = "1Gi"
     kibana_cpu_limit = "500Mi"

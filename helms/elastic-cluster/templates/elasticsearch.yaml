@@ -6,9 +6,9 @@ metadata:
 spec:
   version: {{ .Values.elasticsearch.version }}
   
-  {{- if .Values.elasticsearch.transport }}
+  {{- if .Values.elasticsearch.common.config.enableTransportTLS }}
   transport:
-    {{- include "elasticsearch-cluster.transport" (dict "enableTLS" $.Values.elasticsearch.transport.enableTLS) | nindent 4 }}  
+    {{- include "elasticsearch-cluster.transport" (dict "enableTLS" $.Values.elasticsearch.common.config.enableTransportTLS) | nindent 4 }}  
   {{- end }}
   
   {{- if .Values.elasticsearch.podDisruptionBudget }}
